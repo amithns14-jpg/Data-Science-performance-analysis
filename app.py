@@ -6,8 +6,19 @@ Pandas, NumPy, Matplotlib, and Seaborn.
 """
 
 import os
+import sys
 import io
 import tempfile
+
+# Ensure root directory and inner src directory are on sys.path.
+# This prevents ModuleNotFoundError on cloud platforms like Render.com (which deploys to /opt/render/project/src)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
+SRC_DIR = os.path.join(BASE_DIR, "src")
+if SRC_DIR not in sys.path:
+    sys.path.insert(0, SRC_DIR)
 
 # Ensure matplotlib uses a safe local directory for font cache
 os.environ["MPLCONFIGDIR"] = os.path.join(tempfile.gettempdir(), "mpl_cache")
@@ -18,33 +29,62 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from src.data_generator import generate_synthetic_data, calculate_grade
-from src.data_processor import (
-    auto_detect_columns,
-    validate_dataset,
-    clean_and_normalize,
-    compute_kpi_metrics,
-    compute_subject_stats,
-    STANDARD_COLUMNS,
-    SUBJECT_COLUMNS
-)
-from src.visualizer import (
-    plot_grade_distribution,
-    plot_grade_donut,
-    plot_subject_averages,
-    plot_subject_boxplots,
-    plot_attendance_vs_marks,
-    plot_study_hours_vs_marks,
-    plot_correlation_heatmap,
-    plot_gender_comparison,
-    plot_student_comparison
-)
-from src.student_analytics import (
-    get_students_needing_improvement,
-    get_student_profile,
-    classify_risk_level,
-    generate_recommendations
-)
+try:
+    from src.data_generator import generate_synthetic_data, calculate_grade
+    from src.data_processor import (
+        auto_detect_columns,
+        validate_dataset,
+        clean_and_normalize,
+        compute_kpi_metrics,
+        compute_subject_stats,
+        STANDARD_COLUMNS,
+        SUBJECT_COLUMNS
+    )
+    from src.visualizer import (
+        plot_grade_distribution,
+        plot_grade_donut,
+        plot_subject_averages,
+        plot_subject_boxplots,
+        plot_attendance_vs_marks,
+        plot_study_hours_vs_marks,
+        plot_correlation_heatmap,
+        plot_gender_comparison,
+        plot_student_comparison
+    )
+    from src.student_analytics import (
+        get_students_needing_improvement,
+        get_student_profile,
+        classify_risk_level,
+        generate_recommendations
+    )
+except ImportError:
+    from data_generator import generate_synthetic_data, calculate_grade
+    from data_processor import (
+        auto_detect_columns,
+        validate_dataset,
+        clean_and_normalize,
+        compute_kpi_metrics,
+        compute_subject_stats,
+        STANDARD_COLUMNS,
+        SUBJECT_COLUMNS
+    )
+    from visualizer import (
+        plot_grade_distribution,
+        plot_grade_donut,
+        plot_subject_averages,
+        plot_subject_boxplots,
+        plot_attendance_vs_marks,
+        plot_study_hours_vs_marks,
+        plot_correlation_heatmap,
+        plot_gender_comparison,
+        plot_student_comparison
+    )
+    from student_analytics import (
+        get_students_needing_improvement,
+        get_student_profile,
+        classify_risk_level,
+        generate_recommendations
+    )
 
 # -----------------------------------------------------------------------------
 # PAGE CONFIGURATION & THEME
@@ -127,7 +167,7 @@ if "dataset_mode" not in st.session_state:
 
 if "df_active" not in st.session_state:
     # Load default synthetic dataset (250 records)
-    synthetic_file = os.path.join("data", "synthetic_students.csv")
+    synthetic_file = os.path.join(BASE_DIR, "data", "synthetic_students.csv")
     if os.path.exists(synthetic_file):
         st.session_state.df_active = pd.read_csv(synthetic_file)
     else:
@@ -159,7 +199,7 @@ with st.sidebar:
     if dataset_option == "Option A: Synthetic Dataset":
         if st.session_state.dataset_mode != "Synthetic":
             st.session_state.dataset_mode = "Synthetic"
-            synthetic_file = os.path.join("data", "synthetic_students.csv")
+            synthetic_file = os.path.join(BASE_DIR, "data", "synthetic_students.csv")
             if os.path.exists(synthetic_file):
                 st.session_state.df_active = pd.read_csv(synthetic_file)
             else:
@@ -188,7 +228,7 @@ with st.sidebar:
                 st.error(f"Error parsing CSV: {e}")
 
         # Quick test sample button
-        sample_path = os.path.join("data", "sample_upload.csv")
+        sample_path = os.path.join(BASE_DIR, "data", "sample_upload.csv")
         if os.path.exists(sample_path):
             if st.button("📥 Load Demo College CSV (`sample_upload.csv`)", help="Test upload workflow with simulated real college data"):
                 st.session_state.df_uploaded_raw = pd.read_csv(sample_path)
